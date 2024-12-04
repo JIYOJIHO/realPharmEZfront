@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
-import 'info.dart'; // info.dart 파일을 import 해야 합니다.
+import 'InvenCheck.dart';
+import 'info.dart'; // info.dart 파일 import
+import 'pickup.dart'; // PickUp 페이지를 위해 필요하다면 추가
+// import 'package:http/http.dart';
 
 void main() => runApp(MyApp());
 
@@ -13,7 +17,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Google Maps Demo',
       home: MapSample(),
       routes: {
-        '/info': (context) => MedicineInfoPage(), // 약 정보 페이지 라우팅 추가
+        '/info': (context) => MedicineInfoPage(), // 약 정보 페이지 라우팅
+        '/home': (context) => MapSample(), // 홈 화면으로 다시 이동
+        '/pickup': (context) => InvenCheckScreen(), // PickUp 페이지 추가 (필요 시)
+        '/mypage': (context) => PickUpPage()
       },
     );
   }
@@ -27,22 +34,29 @@ class MapSample extends StatefulWidget {
 }
 
 class MapSampleState extends State<MapSample> {
-  final Completer<GoogleMapController> _controller =
-  Completer<GoogleMapController>();
-
+  final Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
   static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(36.3664960, 127.3449815), // 초기 카메라 위치
-    zoom: 19.027,
+    target: LatLng(36.3664960, 127.3449815),
+    zoom: 16.027,
   );
 
   final Set<Marker> _markers = {};
-
-  int _selectedIndex = 0; // 하단 네비게이션 상태
-
+  int _selectedIndex = 0;
   double? lat;
   double? lng;
-
   Location location = Location();
+
+  // API 통신을 위한 Dio와 ApiApi 객체
+  final Dio _dio = Dio();
+
+  // 검색어 및 API 결과 상태
+  final TextEditingController _searchController = TextEditingController();
+  String _drugInfo = ''; // 약 정보 표시 상태
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,14 +79,14 @@ class MapSampleState extends State<MapSample> {
             child: Stack(
               children: [
                 GoogleMap(
-                  mapType: MapType.hybrid,
+                  mapType: MapType.normal,
                   initialCameraPosition: _kGooglePlex,
                   markers: _markers, // 마커 추가
                   onMapCreated: (GoogleMapController controller) {
                     _controller.complete(controller);
                   },
                 ),
-                // 왼쪽 상단: 검색창과 현재 위치 버튼
+                // 검색창과 현재 위치 버튼
                 Positioned(
                   top: 10,
                   left: 16,
@@ -83,10 +97,10 @@ class MapSampleState extends State<MapSample> {
                         heroTag: "current_location",
                         onPressed: _currentLocation,
                         backgroundColor: Colors.white,
-                        mini: true, // 작게 만듦
+                        mini: true,
                         child: Icon(Icons.my_location, color: Colors.black),
                       ),
-                      const SizedBox(width: 8), // 버튼과 검색창 사이 간격
+                      const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
                           decoration: InputDecoration(
@@ -103,12 +117,12 @@ class MapSampleState extends State<MapSample> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8), // 검색창과 검색 버튼 간격
+                      const SizedBox(width: 8),
                       FloatingActionButton(
                         heroTag: "search_button",
                         onPressed: () {
-                          // TODO: 검색 기능 추가
-                          print('Search button pressed');
+                          // 간단한 검색 버튼 동작
+                          print('Search button clicked!');
                         },
                         backgroundColor: Colors.white,
                         mini: true,
@@ -129,13 +143,15 @@ class MapSampleState extends State<MapSample> {
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
-            if (index == 4) {
+            if (index == 1) {
               Navigator.pushNamed(context, '/home');
             } else if (index == 3) {
-              // 약 정보 화면으로 이동
-              Navigator.pushNamed(context, '/info');
+              Navigator.pushNamed(context, '/info'); // 약 정보 페이지
+            } else if (index == 2) {
+              Navigator.pushNamed(context, '/pickup'); // 픽업 페이지
+            } else if (index == 4) {
+              Navigator.pushNamed(context, '/mypage');
             }
-            print('Selected index: $index');
           });
         },
         items: [
