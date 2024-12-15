@@ -28,9 +28,13 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  camera: ^0.11.0+2
   flutter:
     sdk: flutter
   http: ^1.2.2
+  sliding_up_panel: ^2.0.0+1
+  geolocator: ^9.0.1
+  json_annotation: ^4.0.1
 
 
   # The following adds the Cupertino Icons font to your application.

@@ -1,23 +1,45 @@
-import 'package:retrofit/retrofit.dart';
-import 'package:dio/dio.dart';
-import 'medicine.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ApiService {
-  final Dio _dio;
+  // Base URL for the API
+  static const String baseUrl = 'http://10.0.2.2:8080';
 
-  ApiService(this._dio);
+  // Fetch medicine information by name
+  static Future<List<dynamic>> fetchMedicineInfo(String medicineName) async {
+    final url = Uri.parse('$baseUrl/medicines?medicineName=$medicineName');
 
-  // 엔드포인트에서 데이터를 가져오는 메서드
-  Future<Medicine> getMedicineById(String id) async {
     try {
-      final response = await _dio.get('http://localhost:8080/medicines/$id');
+      final response = await http.get(url);
+
       if (response.statusCode == 200) {
-        return Medicine.fromJson(response.data); // JSON 데이터를 객체로 변환
+        return json.decode(response.body) as List<dynamic>;
       } else {
-        throw Exception("Failed to load medicine data");
+        throw Exception('Failed to fetch medicine information: ${response.body}');
       }
-    } catch (e) {
-      throw Exception("Failed to load medicine data: $e");
+    } catch (error) {
+      throw Exception('Error fetching medicine information: $error');
+    }
+  }
+
+  // Fetch pharmacy information by medicine name, latitude, and longitude
+  static Future<List<Map<String, dynamic>>> fetchPharmacyInfo(
+      String medicineName, double latitude, double longitude) async {
+    final url = Uri.parse(
+        '$baseUrl/stocks/search/$medicineName?latitude=$latitude&longitude=$longitude');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        return (json.decode(response.body) as List<dynamic>)
+            .map((item) => item as Map<String, dynamic>)
+            .toList();
+      } else {
+        throw Exception('Failed to fetch pharmacy information: ${response.body}');
+      }
+    } catch (error) {
+      throw Exception('Error fetching pharmacy information: $error');
     }
   }
 }

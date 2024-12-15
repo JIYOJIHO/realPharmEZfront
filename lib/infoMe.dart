@@ -156,10 +156,6 @@ class _SearchResultPageState extends State<SearchResultPage> {
                                       style: TextStyle(fontSize: 14),
                                     ),
                                     SizedBox(height: 4),
-                                    Text(
-                                      '효능: ${medicine['efficacy'] ?? '효능 정보 없음'}',
-                                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                                    ),
                                   ],
                                 ),
                               ),
